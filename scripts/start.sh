@@ -17,9 +17,13 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Check if docker-compose is available
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ docker-compose is not installed. Please install Docker Desktop or docker-compose."
+# Prefer 'docker compose' (plugin, bundled with Docker Desktop) over standalone 'docker-compose'
+if docker compose version &> /dev/null 2>&1; then
+    COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE="docker-compose"
+else
+    echo "❌ Neither 'docker compose' nor 'docker-compose' is available. Please install Docker Desktop."
     exit 1
 fi
 
@@ -35,7 +39,7 @@ fi
 
 # Start Docker Compose
 echo "🐳 Starting Docker containers..."
-docker-compose up --build
+$COMPOSE up --build
 
 echo "✅ Application is running!"
 echo "   Frontend: http://localhost:8000"

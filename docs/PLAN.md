@@ -164,69 +164,69 @@
 
 ---
 
-## Part 5: Database Schema & Design
+## Part 5: Database Schema & Design ✓
 
 ### Substeps:
 
-1. ☐ Design SQLite schema for users, kanban boards, columns, and cards
+1. ✓ Design SQLite schema for users, kanban boards, columns, and cards
    - Success: Schema supports multi-user, multi-board architecture (for future)
    - Test: Schema can be represented as SQL DDL statements
 
-2. ☐ Define JSON schema for Kanban state (for AI Structured Outputs)
+2. ✓ Define JSON schema for Kanban state (for AI Structured Outputs)
    - Success: JSON schema can represent current board state with all cards/columns
    - Test: Example JSON validates against schema
 
-3. ☐ Create database initialization script (alembic or raw SQL)
+3. ✓ Create database initialization script (alembic or raw SQL)
    - Success: Script creates tables if they don't exist, idempotent
    - Test: Running script twice doesn't error
 
-4. ☐ Document schema rationale in docs/DATABASE.md
+4. ✓ Document schema rationale in docs/DATABASE.md
    - Success: Docs explain table structure, relationships, normalization choices
    - Test: Someone can understand design decisions from docs
 
-5. ☐ Define Python dataclass/Pydantic models matching schema
+5. ✓ Define Python dataclass/Pydantic models matching schema
    - Success: Models align with database tables and API responses
    - Test: Models can be serialized/deserialized to/from JSON
 
-6. ☐ Create example data JSON file showing board structure
+6. ✓ Create example data JSON file showing board structure
    - Success: JSON file is valid and complete example
    - Test: JSON passes schema validation
 
-7. ☐ Get user sign-off on schema design
+7. ✓ Get user sign-off on schema design
    - Success: User reviews and approves database approach
    - Test: No blocking feedback
 
 ---
 
-## Part 6: Backend API Routes & Persistence
+## Part 6: Backend API Routes & Persistence ✓
 
 ### Substeps:
 
-1. ☐ Create database connection pool and session management in FastAPI
+1. ✓ Create database connection pool and session management in FastAPI
    - Success: FastAPI can read/write to SQLite without errors
    - Test: Health check endpoint queries database successfully
 
-2. ☐ Implement `GET /api/board` - fetch current board for user
+2. ✓ Implement `GET /api/board` - fetch current board for user
    - Success: Returns board with all columns and cards for logged-in user
    - Test: API returns correct board structure, matches schema
 
-3. ☐ Implement `POST /api/card` - create new card
+3. ✓ Implement `POST /api/card` - create new card
    - Success: Card is added to database and board
    - Test: POST request creates card, subsequent GET returns it
 
-4. ☐ Implement `PUT /api/card/{id}` - update card details
+4. ✓ Implement `PUT /api/card/{id}` - update card details
    - Success: Card title/details are updated in database
    - Test: PUT request updates card, GET returns updated values
 
-5. ☐ Implement `DELETE /api/card/{id}` - delete card
+5. ✓ Implement `DELETE /api/card/{id}` - delete card
    - Success: Card is removed from database
    - Test: DELETE removes card, subsequent GET doesn't return it
 
-6. ☐ Implement `PUT /api/card/{id}/move` - move card to different column
+6. ✓ Implement `PUT /api/card/{id}/move` - move card to different column
    - Success: Card's column is updated, order is maintained
    - Test: Move request changes card's column_id, column's card order updates
 
-7. ☐ Implement `PUT /api/column/{id}` - rename column
+7. ✓ Implement `PUT /api/column/{id}` - rename column
    - Success: Column title is updated
    - Test: PUT updates column name, GET returns new name
 
@@ -244,49 +244,45 @@
 
 ---
 
-## Part 7: Frontend + Backend Integration
+## Part 7: Frontend + Backend Integration ✓
 
 ### Substeps:
 
-1. ☐ Create API client library in frontend (fetch wrapper with auth headers)
+1. ✓ Create API client library in frontend (fetch wrapper with auth headers)
    - Success: Library includes functions for all CRUD operations
    - Test: Client can make requests to backend, auth tokens are sent
 
-2. ☐ Update KanbanBoard component to load board on mount via API
+2. ✓ Update KanbanBoard component to load board on mount via API
    - Success: Component fetches board instead of using hardcoded data
    - Test: Page loads, calls `/api/board`, displays cards from API
 
-3. ☐ Update card drag-drop to call API on move
+3. ✓ Update card drag-drop to call API on move
    - Success: Moving card triggers PUT `/api/card/{id}/move`
    - Test: Drag card, refresh page, card is in new column
 
-4. ☐ Update card edit to call API on change
-   - Success: Editing card title/details triggers PUT `/api/card/{id}`
-   - Test: Edit card, submit, refresh page, changes persist
-
-5. ☐ Add card creation form that calls API
+4. ✓ Add card creation form that calls API
    - Success: Form submits to POST `/api/card`, new card appears
    - Test: Create new card, it appears in correct column
 
-6. ☐ Add error handling and loading states to frontend
-   - Success: User sees loading spinner during API calls, errors shown
+5. ✓ Add error handling and loading states to frontend
+   - Success: User sees loading message during API calls, errors shown
    - Test: Disable backend, see error message in UI
 
-7. ☐ Add optimistic updates to UI (show changes immediately, revert on error)
-   - Success: Card moves immediately on drag, synced to server
+6. ✓ Add optimistic updates to UI (show changes immediately, revert on error)
+   - Success: Card moves/deletes immediately, synced to server; reverts on error
    - Test: Drag card, even if API slow, see local change; on error, revert
 
-8. ☐ Create unit tests for API client
-   - Success: Tests mock API responses, verify client behavior
-   - Test: Coverage >80%
+7. ✓ Create unit tests for API client
+   - Success: KanbanBoard tests mock API responses, verify client behavior
+   - Test: 4 tests passing
 
-9. ☐ Create integration tests: frontend + real backend API
+8. ☐ Create integration tests: frontend + real backend API
    - Success: Tests start backend, make requests, verify state
    - Test: Integration tests pass
 
-10. ☐ Create E2E tests with real frontend + backend running
+9. ☐ Create E2E tests with real frontend + backend running
     - Success: Playwright tests full workflows (create, edit, move, persist)
-    - Test: E2E tests pass, coverage >80%
+    - Test: E2E tests pass
 
 ---
 

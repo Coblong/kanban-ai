@@ -1,3 +1,5 @@
+import type { ApiBoard } from './api';
+
 export type Card = {
   id: string;
   title: string;
@@ -160,6 +162,25 @@ export const moveCard = (
     return column;
   });
 };
+
+export function boardFromApi(apiBoard: ApiBoard): BoardData {
+  const cards: Record<string, Card> = {};
+  const columns = [...apiBoard.columns]
+    .sort((a, b) => a.position - b.position)
+    .map((col) => {
+      const cardIds = [...col.cards]
+        .sort((a, b) => a.position - b.position)
+        .map((c) => {
+          const cardId = `card-${c.id}`;
+          cards[cardId] = { id: cardId, title: c.title, details: c.description ?? '' };
+          return cardId;
+        });
+      return { id: `col-${col.id}`, title: col.title, cardIds };
+    });
+  return { columns, cards };
+}
+
+export const numericId = (prefixedId: string) => Number(prefixedId.split('-')[1]);
 
 export const createId = (prefix: string) => {
   const randomPart = Math.random().toString(36).slice(2, 8);
