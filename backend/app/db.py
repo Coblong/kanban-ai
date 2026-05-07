@@ -61,9 +61,11 @@ def init_db():
             
             # Create default columns
             columns = [
-                ("To Do", 0),
-                ("In Progress", 1),
-                ("Done", 2)
+                ("Backlog", 0),
+                ("Discovery", 1),
+                ("In Progress", 2),
+                ("Review", 3),
+                ("Done", 4),
             ]
             for title, position in columns:
                 cursor.execute(
