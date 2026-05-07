@@ -18,7 +18,7 @@ def ensure_db_directory():
 
 def get_db_connection():
     """Get a SQLite connection with row factory."""
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     # Enable foreign key constraints
     conn.execute("PRAGMA foreign_keys = ON")

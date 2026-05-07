@@ -1,6 +1,9 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles

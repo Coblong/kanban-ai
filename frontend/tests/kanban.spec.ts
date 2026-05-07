@@ -50,3 +50,30 @@ test('logs out successfully', async ({ page }) => {
   await page.getByRole('button', { name: /logout/i }).click();
   await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
 });
+
+test('shows AI chat sidebar', async ({ page }) => {
+  await expect(page.getByRole('complementary', { name: /AI chat sidebar/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'AI Assistant' })).toBeVisible();
+  await expect(page.getByLabel('Message input')).toBeVisible();
+});
+
+test('AI chat sends message and shows response', async ({ page }) => {
+  // Intercept the AI chat endpoint to avoid real API calls
+  await page.route('**/api/ai/chat', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: 'I have noted your request.',
+        operations: [],
+        board: null,
+      }),
+    }),
+  );
+
+  await page.getByLabel('Message input').fill('What cards are in To Do?');
+  await page.getByRole('button', { name: /send/i }).click();
+
+  await expect(page.getByText('What cards are in To Do?')).toBeVisible();
+  await expect(page.getByText('I have noted your request.')).toBeVisible();
+});

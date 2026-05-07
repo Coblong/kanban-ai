@@ -10,6 +10,7 @@ const mockCreateCard = vi.fn();
 const mockDeleteCard = vi.fn();
 const mockRenameColumn = vi.fn();
 const mockMoveCard = vi.fn();
+const mockAiChat = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -18,6 +19,7 @@ vi.mock('@/lib/api', () => ({
     deleteCard: (...args: unknown[]) => mockDeleteCard(...args),
     renameColumn: (...args: unknown[]) => mockRenameColumn(...args),
     moveCard: (...args: unknown[]) => mockMoveCard(...args),
+    aiChat: (...args: unknown[]) => mockAiChat(...args),
   },
 }));
 
@@ -57,6 +59,7 @@ describe('KanbanBoard', () => {
     mockDeleteCard.mockResolvedValue(undefined);
     mockRenameColumn.mockResolvedValue({});
     mockMoveCard.mockResolvedValue({});
+    mockAiChat.mockResolvedValue({ message: 'Done', operations: [], board: null });
     mockPush.mockReset();
   });
 
@@ -96,6 +99,41 @@ describe('KanbanBoard', () => {
     await userEvent.click(deleteButton);
 
     expect(within(column).queryByText('New card')).not.toBeInTheDocument();
+  });
+
+  it('renders the AI chat sidebar', async () => {
+    renderWithAuth(<KanbanBoard />);
+    await waitFor(() => screen.getAllByTestId(/column-/i));
+    expect(screen.getByRole('complementary', { name: /AI chat sidebar/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /AI Assistant/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('Message input')).toBeInTheDocument();
+  });
+
+  it('board updates when AI returns a new board', async () => {
+    const updatedBoard = {
+      ...mockBoard,
+      columns: [
+        {
+          ...mockBoard.columns[0],
+          cards: [
+            ...mockBoard.columns[0].cards,
+            { id: 99, column_id: 1, title: 'AI created card', description: null, position: 1 },
+          ],
+        },
+        mockBoard.columns[1],
+        mockBoard.columns[2],
+      ],
+    };
+    mockAiChat.mockResolvedValue({ message: 'Created a card', operations: [], board: updatedBoard });
+
+    renderWithAuth(<KanbanBoard />);
+    await waitFor(() => screen.getAllByTestId(/column-/i));
+
+    const input = screen.getByLabelText('Message input');
+    await userEvent.type(input, 'add a card');
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
+
+    await waitFor(() => expect(screen.getByText('AI created card')).toBeInTheDocument());
   });
 
   it('shows logout button and handles logout', async () => {

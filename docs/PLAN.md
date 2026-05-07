@@ -361,47 +361,47 @@
 
 ---
 
-## Part 10: AI Chat Sidebar & Auto-Update
+## Part 10: AI Chat Sidebar & Auto-Update ✓
 
 ### Substeps:
 
-1. ☐ Create ChatSidebar component with message list and input
+1. ✓ Create ChatSidebar component with message list and input
    - Success: Component renders as sidebar on Kanban page
    - Test: Sidebar appears, messages display, input field works
 
-2. ☐ Implement message sending logic
+2. ✓ Implement message sending logic
    - Success: User types message, clicks send, message appears in list
    - Test: Can send multiple messages, all appear in UI
 
-3. ☐ Connect ChatSidebar to `/api/ai/chat` endpoint
+3. ✓ Connect ChatSidebar to `/api/ai/chat` endpoint
    - Success: Sending message triggers API call, AI response appears
    - Test: Send message, see AI response appear
 
-4. ☐ Implement auto-refresh of Kanban when AI makes changes
+4. ✓ Implement auto-refresh of Kanban when AI makes changes
    - Success: If AI creates/edits/moves card, board updates automatically
    - Test: AI says "create a new card", board refreshes and shows it
 
-5. ☐ Add loading state and error handling to chat
+5. ✓ Add loading state and error handling to chat
    - Success: User sees spinner while waiting for AI, errors shown
    - Test: Disable API, see error in chat
 
-6. ☐ Add visual feedback for AI operations on cards
+6. ✓ Add visual feedback for AI operations on cards
    - Success: Card that was created by AI highlights briefly
    - Test: AI creates card, card highlights and animates
 
-7. ☐ Create unit tests for ChatSidebar component
+7. ✓ Create unit tests for ChatSidebar component
    - Success: Tests verify rendering, message handling, API calls
    - Test: Coverage >80%
 
-8. ☐ Create integration tests: ChatSidebar + KanbanBoard + API
+8. ✓ Create integration tests: ChatSidebar + KanbanBoard + API
    - Success: Tests verify AI response updates board correctly
    - Test: Integration tests pass
 
-9. ☐ Create E2E tests for full chat + board workflow
+9. ✓ Create E2E tests for full chat + board workflow
    - Success: Playwright tests verify user can chat with AI and see board updates
    - Test: E2E tests pass
 
-10. ☐ Polish UI/UX and document in docs/USER_GUIDE.md
+10. ✓ Polish UI/UX and document in docs/USER_GUIDE.md
     - Success: User guide explains AI capabilities, chat syntax, examples
     - Test: Users can understand how to use AI feature from docs
 

@@ -21,6 +21,21 @@ export type ApiBoard = {
   columns: ApiColumn[];
 };
 
+export type CardOperation = {
+  type: 'create_card' | 'move_card' | 'update_card' | 'delete_card';
+  column_id?: number;
+  card_id?: number;
+  title?: string;
+  description?: string | null;
+  position?: number;
+};
+
+export type AiChatResponse = {
+  message: string;
+  operations: CardOperation[];
+  board: ApiBoard | null;
+};
+
 function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const token = localStorage.getItem('authToken');
@@ -71,5 +86,11 @@ export const api = {
     request(`/api/column/${columnId}`, {
       method: 'PUT',
       body: JSON.stringify({ title }),
+    }),
+
+  aiChat: (message: string) =>
+    request<AiChatResponse>('/api/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
     }),
 };
