@@ -340,6 +340,13 @@ dev = [
     { name = "pytest-cov" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = "==0.104.1" },
@@ -354,6 +361,13 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], specifier = "==0.24.0" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=7.4.3" },
+    { name = "pytest-asyncio", specifier = ">=0.21.1" },
+    { name = "pytest-cov", specifier = ">=4.1.0" },
+]
 
 [[package]]
 name = "pydantic"

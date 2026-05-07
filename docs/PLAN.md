@@ -104,15 +104,15 @@
    - Success: Tests verify drag-drop, rename, add/delete cards work end-to-end
    - Test: E2E tests pass for core functionality
 
-6. ☐ Create GitHub Actions CI to run tests on each commit
+6. ✓ Create GitHub Actions CI to run tests on each commit
    - Success: CI workflow runs unit, integration, and E2E tests
    - Test: Pushing a commit triggers CI, results appear in GitHub
 
-7. ☐ Update docs/FRONTEND.md with testing instructions
+7. ✓ Update docs/FRONTEND.md with testing instructions
    - Success: Instructions clear for running tests locally
    - Test: Another developer can run all tests from docs
 
-8. ☐ Verify test coverage meets quality standards (not rigid 80% target)
+8. ✓ Verify test coverage meets quality standards (not rigid 80% target)
    - Success: Tests cover critical paths and edge cases that matter
    - Test: Coverage adequate for confidence in releases
 
@@ -230,17 +230,16 @@
    - Success: Column title is updated
    - Test: PUT updates column name, GET returns new name
 
-8. ☐ Add comprehensive unit tests for each API endpoint
+8. ✓ Add comprehensive unit tests for each API endpoint
    - Success: Tests cover happy paths and error cases (not found, validation errors)
    - Test: All tests pass, >80% code coverage for API handlers
 
-9. ☐ Add integration tests that test full flow: auth → get board → modify → verify
+9. ✓ Add integration tests that test full flow: auth → get board → modify → verify
    - Success: Tests verify state persists across requests
    - Test: Integration tests pass
 
 10. ☐ Add error handling for concurrent edits (basic optimistic locking)
-    - Success: If board changes, API returns clear error
-    - Test: Concurrent requests are handled gracefully
+    - Deferred: MVP has a single local user; concurrent edits are not a real scenario
 
 ---
 
@@ -276,41 +275,41 @@
    - Success: KanbanBoard tests mock API responses, verify client behavior
    - Test: 4 tests passing
 
-8. ☐ Create integration tests: frontend + real backend API
+8. ✓ Create integration tests: frontend + real backend API
    - Success: Tests start backend, make requests, verify state
    - Test: Integration tests pass
 
-9. ☐ Create E2E tests with real frontend + backend running
+9. ✓ Create E2E tests with real frontend + backend running
     - Success: Playwright tests full workflows (create, edit, move, persist)
     - Test: E2E tests pass
 
 ---
 
-## Part 8: AI Connectivity Setup
+## Part 8: AI Connectivity Setup ✓
 
 ### Substeps:
 
-1. ☐ Add OPENROUTER_API_KEY to .env file in project root
+1. ✓ Add OPENROUTER_API_KEY to .env file in project root
    - Success: .env file exists with valid key
    - Test: Key can be read by Python backend
 
-2. ☐ Create OpenRouter client library in backend
+2. ✓ Create OpenRouter client library in backend
    - Success: Library can make API calls to OpenRouter
    - Test: Client initializes without errors
 
-3. ☐ Create test endpoint `GET /api/ai/test` that calls AI with "2+2"
+3. ✓ Create test endpoint `GET /api/ai/test` that calls AI with "2+2"
    - Success: Endpoint calls OpenRouter, returns AI response
    - Test: `curl localhost:8000/api/ai/test` returns "4" or similar
 
-4. ☐ Add basic error handling for AI API failures
+4. ✓ Add basic error handling for AI API failures
    - Success: If OpenRouter is down, API returns clear error
    - Test: Mock a failure, see appropriate error response
 
-5. ☐ Create unit tests for AI client
+5. ✓ Create unit tests for AI client
    - Success: Tests mock OpenRouter responses
    - Test: Tests pass, coverage >80%
 
-6. ☐ Document AI setup in docs/AI.md
+6. ✓ Document AI setup in docs/AI.md
    - Success: Instructions explain how to get API key, test connectivity
    - Test: New developer can follow docs to set up
 

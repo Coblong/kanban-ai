@@ -39,7 +39,7 @@ fi
 
 # Start Docker Compose
 echo "🐳 Starting Docker containers..."
-$COMPOSE up --build
+$COMPOSE up --build -d
 
 echo "✅ Application is running!"
 echo "   Frontend: http://localhost:8000"

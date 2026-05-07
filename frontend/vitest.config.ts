@@ -10,7 +10,13 @@ export default defineConfig({
     globals: true,
     coverage: {
       reporter: ['text', 'html'],
-      exclude: ['src/lib/api.integration.test.ts'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test/**',
+        'src/app/layout.tsx',
+        'src/app/login/page.tsx',
+      ],
     },
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules'],

@@ -110,8 +110,10 @@ async def logout():
 # Import FileResponse for serving HTML
 from fastapi.responses import FileResponse
 from .routes.board import router as board_router
+from .routes.ai import router as ai_router
 
 app.include_router(board_router)
+app.include_router(ai_router)
 
 # Serve static frontend files from Next.js build
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "out")
