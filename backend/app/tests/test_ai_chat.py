@@ -56,10 +56,11 @@ class TestChatEndpoint:
         data = r.json()
         assert data["message"] == "Hello!"
         assert data["operations"] == []
-        assert data["board"] is not None
+        assert data["board"] is None
 
-    def test_returns_updated_board(self, client):
-        with patch("app.routes.ai.chat", new=AsyncMock(return_value=ai_reply("Done"))):
+    def test_returns_updated_board_after_operation(self, client):
+        ops = [{"type": "create_card", "column_id": 1, "title": "Board check", "description": None}]
+        with patch("app.routes.ai.chat", new=AsyncMock(return_value=ai_reply("Done", ops))):
             r = client.post("/api/ai/chat", headers=AUTH, json={"message": "show board"})
         board = r.json()["board"]
         assert board["title"] == "My Board"

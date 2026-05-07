@@ -26,8 +26,7 @@ export const ChatSidebar = ({ onBoardUpdate }: ChatSidebarProps) => {
     }
   }, [messages, loading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async () => {
     const text = input.trim();
     if (!text || loading) return;
 
@@ -49,10 +48,15 @@ export const ChatSidebar = ({ onBoardUpdate }: ChatSidebarProps) => {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submit();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as unknown as React.FormEvent);
+      submit();
     }
   };
 

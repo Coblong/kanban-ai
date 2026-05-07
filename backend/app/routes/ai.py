@@ -2,8 +2,6 @@
 
 import logging
 from sqlite3 import Connection
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..ai import (
@@ -16,37 +14,12 @@ from ..ai import (
 )
 from ..db import get_db
 from ..models import BoardFull, CardOperation, ChatRequest, ChatResponse
-from .board import get_current_user_id
+from .board import _fetch_full_board, get_current_user_id
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai")
 
-
-def _fetch_board(conn: Connection, user_id: int) -> Optional[dict]:
-    board = conn.execute(
-        "SELECT * FROM kanban_boards WHERE user_id = ?", (user_id,)
-    ).fetchone()
-    if not board:
-        return None
-    board = dict(board)
-    columns = [
-        dict(r)
-        for r in conn.execute(
-            "SELECT * FROM kanban_columns WHERE board_id = ? ORDER BY position",
-            (board["id"],),
-        ).fetchall()
-    ]
-    for col in columns:
-        col["cards"] = [
-            dict(r)
-            for r in conn.execute(
-                "SELECT * FROM kanban_cards WHERE column_id = ? ORDER BY position",
-                (col["id"],),
-            ).fetchall()
-        ]
-    board["columns"] = columns
-    return board
 
 
 def _execute_operations(
@@ -120,7 +93,7 @@ async def chat_endpoint(
     user_id: int = Depends(get_current_user_id),
 ):
     """AI chat with board context. The AI may create, move, update, or delete cards."""
-    board = _fetch_board(conn, user_id)
+    board = _fetch_full_board(conn, user_id)
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
@@ -146,10 +119,14 @@ async def chat_endpoint(
     add_to_history(user_id, "user", request.message)
     add_to_history(user_id, "assistant", raw_response)
 
-    updated_board = _fetch_board(conn, user_id)
+    if executed_ops:
+        updated_board = _fetch_full_board(conn, user_id)
+        response_board = BoardFull.model_validate(updated_board) if updated_board else None
+    else:
+        response_board = None
 
     return ChatResponse(
         message=parsed["message"],
         operations=executed_ops,
-        board=BoardFull.model_validate(updated_board) if updated_board else None,
+        board=response_board,
     )

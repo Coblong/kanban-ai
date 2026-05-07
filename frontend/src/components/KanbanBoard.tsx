@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { KanbanColumn } from '@/components/KanbanColumn';
 import { KanbanCardPreview } from '@/components/KanbanCardPreview';
@@ -16,6 +16,7 @@ export const KanbanBoard = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [highlightedCardIds, setHighlightedCardIds] = useState<Set<string>>(new Set());
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { logout } = useAuth();
   const router = useRouter();
 
@@ -37,8 +38,6 @@ export const KanbanBoard = () => {
         setLoading(false);
       });
   }, []);
-
-  const cardsById = useMemo(() => board.cards, [board.cards]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveCardId(event.active.id as string);
@@ -96,7 +95,6 @@ export const KanbanBoard = () => {
         columns: prev.columns.map((col) => (col.id === columnId ? { ...col, cardIds: [...col.cardIds, cardId] } : col)),
       }));
     } catch {
-      // No optimistic update to revert
     }
   };
 
@@ -134,13 +132,14 @@ export const KanbanBoard = () => {
 
       if (toHighlight.size > 0) {
         setHighlightedCardIds(toHighlight);
-        setTimeout(() => setHighlightedCardIds(new Set()), 2000);
+        if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = setTimeout(() => setHighlightedCardIds(new Set()), 2000);
       }
     },
     [board.cards],
   );
 
-  const activeCard = activeCardId ? cardsById[activeCardId] : null;
+  const activeCard = activeCardId ? board.cards[activeCardId] : null;
 
   const handleLogout = async () => {
     try {
@@ -183,14 +182,12 @@ export const KanbanBoard = () => {
                 Keep momentum visible. Rename columns, drag cards between stages, and capture quick notes without getting buried in settings.
               </p>
             </div>
-            <div className='flex items-center gap-4'>
-              <button
-                onClick={handleLogout}
-                className='rounded-2xl border border-[var(--stroke)] bg-white px-5 py-4 text-sm font-semibold text-[var(--navy-dark)] hover:bg-gray-50 transition-colors'
-              >
-                Logout
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className='rounded-2xl border border-[var(--stroke)] bg-white px-5 py-4 text-sm font-semibold text-[var(--navy-dark)] hover:bg-gray-50 transition-colors'
+            >
+              Logout
+            </button>
           </div>
           <div className='flex flex-wrap items-center gap-4'>
             {board.columns.map((column) => (

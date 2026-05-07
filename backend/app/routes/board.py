@@ -26,15 +26,32 @@ def _rows(conn: Connection, sql: str, params: tuple = ()):
     return [dict(r) for r in conn.execute(sql, params).fetchall()]
 
 
-@router.get("/board", response_model=BoardFull)
-def get_board(conn: Connection = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+def _fetch_full_board(conn: Connection, user_id: int) -> dict | None:
     board = _row(conn, "SELECT * FROM kanban_boards WHERE user_id = ?", (user_id,))
     if not board:
-        raise HTTPException(status_code=404, detail="Board not found")
+        return None
     columns = _rows(conn, "SELECT * FROM kanban_columns WHERE board_id = ? ORDER BY position", (board["id"],))
-    for col in columns:
-        col["cards"] = _rows(conn, "SELECT * FROM kanban_cards WHERE column_id = ? ORDER BY position", (col["id"],))
+    col_ids = tuple(col["id"] for col in columns)
+    if col_ids:
+        placeholders = ",".join("?" * len(col_ids))
+        all_cards = _rows(conn, f"SELECT * FROM kanban_cards WHERE column_id IN ({placeholders}) ORDER BY column_id, position", col_ids)
+        cards_by_col: dict[int, list] = {cid: [] for cid in col_ids}
+        for card in all_cards:
+            cards_by_col[card["column_id"]].append(card)
+        for col in columns:
+            col["cards"] = cards_by_col[col["id"]]
+    else:
+        for col in columns:
+            col["cards"] = []
     board["columns"] = columns
+    return board
+
+
+@router.get("/board", response_model=BoardFull)
+def get_board(conn: Connection = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    board = _fetch_full_board(conn, user_id)
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
     return board
 
 
@@ -71,17 +88,13 @@ def update_card(card_id: int, update: CardUpdate, conn: Connection = Depends(get
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
 
-    if update.title is not None:
+    fields = {k: v for k, v in [("title", update.title), ("description", update.description)] if v is not None}
+    if fields:
+        set_clause = ", ".join(f"{k} = ?" for k in fields)
         conn.execute(
-            "UPDATE kanban_cards SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (update.title, card_id)
+            f"UPDATE kanban_cards SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (*fields.values(), card_id)
         )
-    if update.description is not None:
-        conn.execute(
-            "UPDATE kanban_cards SET description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (update.description, card_id)
-        )
-    if update.title is not None or update.description is not None:
         conn.commit()
 
     return _row(conn, "SELECT * FROM kanban_cards WHERE id = ?", (card_id,))
