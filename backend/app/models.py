@@ -1,7 +1,7 @@
 """Pydantic models for request/response validation."""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -180,3 +180,29 @@ class SuccessResponse(BaseModel):
     """Generic success response."""
     message: str
     data: Optional[dict] = None
+
+
+# ============================================================================
+# AI Chat Models
+# ============================================================================
+
+class CardOperation(BaseModel):
+    """An AI-requested board operation."""
+    type: Literal["create_card", "move_card", "update_card", "delete_card"]
+    column_id: Optional[int] = None
+    card_id: Optional[int] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    position: Optional[int] = None
+
+
+class ChatRequest(BaseModel):
+    """AI chat request."""
+    message: str = Field(..., min_length=1, max_length=4000)
+
+
+class ChatResponse(BaseModel):
+    """AI chat response."""
+    message: str
+    operations: List[CardOperation] = []
+    board: Optional[BoardFull] = None

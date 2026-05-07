@@ -80,7 +80,7 @@
 
 ---
 
-## Part 3: Integrate Frontend
+## Part 3: Integrate Frontend ✓
 
 ### Substeps:
 
@@ -315,47 +315,47 @@
 
 ---
 
-## Part 9: AI with Kanban Context & Structured Outputs
+## Part 9: AI with Kanban Context & Structured Outputs ✓
 
 ### Substeps:
 
-1. ☐ Define JSON schema for AI Structured Outputs
+1. ✓ Define JSON schema for AI Structured Outputs
    - Success: Schema includes: response text, optional card operations (create/edit/move)
    - Test: Schema is valid, can represent example AI responses
 
-2. ☐ Create prompt template that includes board state + user question
+2. ✓ Create prompt template that includes board state + user question
    - Success: Template formats Kanban JSON + user message clearly
    - Test: Generated prompt is readable and includes all context
 
-3. ☐ Create `POST /api/ai/chat` endpoint accepting user message + conversation history
+3. ✓ Create `POST /api/ai/chat` endpoint accepting user message + conversation history
    - Success: Endpoint calls AI with board context, returns structured response
    - Test: POST request returns response with proper schema
 
-4. ☐ Implement response parsing to extract AI message + card operations
+4. ✓ Implement response parsing to extract AI message + card operations
    - Success: Parser extracts text and operations from AI response
    - Test: Can parse example AI response correctly
 
-5. ☐ Implement card operation execution (create/edit/move)
+5. ✓ Implement card operation execution (create/edit/move)
    - Success: Operations from AI are applied to database
    - Test: AI says "create a card", it appears in database
 
-6. ☐ Create unit tests for prompt generation
+6. ✓ Create unit tests for prompt generation
    - Success: Tests verify board state is included correctly
    - Test: Tests pass
 
-7. ☐ Create unit tests for response parsing
+7. ✓ Create unit tests for response parsing
    - Success: Tests verify structured output is parsed correctly
    - Test: Tests pass, coverage >80%
 
-8. ☐ Create integration tests for full AI flow
+8. ✓ Create integration tests for full AI flow
    - Success: Test calls AI, verifies response format, checks board updates
    - Test: Integration tests pass
 
-9. ☐ Add conversation history tracking
+9. ✓ Add conversation history tracking
    - Success: Backend stores conversation history (in memory or database)
    - Test: Subsequent AI calls include prior messages
 
-10. ☐ Document AI behavior and limitations in docs/
+10. ✓ Document AI behavior and limitations in docs/
     - Success: Docs explain what AI can do, example prompts, known issues
     - Test: Clear enough for users to understand expectations
 
