@@ -47,7 +47,7 @@ export default function RegisterPage() {
           <div className='inline-flex items-center gap-2 mb-6'>
             <div className='w-2 h-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_8px_var(--accent-cyan)]' />
             <span className='font-display text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-secondary)]'>
-              Kanban Studio
+              Kanban AI
             </span>
           </div>
           <h1 className='font-display text-3xl font-bold text-[var(--text-primary)]'>Create account</h1>

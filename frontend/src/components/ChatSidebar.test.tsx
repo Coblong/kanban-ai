@@ -31,7 +31,7 @@ describe('ChatSidebar', () => {
 
   it('renders heading, placeholder text, input, and send button', () => {
     render(<ChatSidebar boardId={1} onBoardUpdate={noop} />);
-    expect(screen.getByRole('heading', { name: /AI Assistant/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Kai/i })).toBeInTheDocument();
     expect(screen.getByText(/Start a conversation/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Message input')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();

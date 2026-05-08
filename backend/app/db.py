@@ -31,6 +31,7 @@ def _migrate(conn: sqlite3.Connection):
     for table, col, defn in [
         ("users", "display_name", "TEXT"),
         ("kanban_boards", "description", "TEXT"),
+        ("kanban_boards", "color", "TEXT NOT NULL DEFAULT '#00d3ff'"),
     ]:
         try:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {defn}")

@@ -14,7 +14,7 @@ const bodyFont = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Kanban Studio',
+  title: 'Kanban AI',
   description: 'A focused, AI-powered kanban workspace.',
 };
 

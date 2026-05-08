@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { api, type ApiBoardSummary } from '../../lib/api';
 
+const BOARD_COLORS = [
+  '#00d3ff', '#7c3aed', '#10b981', '#f43f5e',
+  '#f97316', '#f59e0b', '#ec4899', '#6366f1',
+];
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
@@ -26,8 +31,11 @@ function BoardCard({
       onClick={() => onClick(board.id)}
     >
       <div className='flex items-start justify-between gap-4'>
-        <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent-cyan-glow)] border border-[var(--accent-cyan)]/20'>
-          <span className='font-display text-sm font-bold text-[var(--accent-cyan)]'>
+        <div
+          className='flex h-9 w-9 items-center justify-center rounded-xl border'
+          style={{ backgroundColor: `${board.color}18`, borderColor: `${board.color}30` }}
+        >
+          <span className='font-display text-sm font-bold' style={{ color: board.color }}>
             {board.title.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -66,7 +74,7 @@ function BoardCard({
         Updated {formatDate(board.updated_at)}
       </p>
 
-      <div className='absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full bg-[var(--accent-cyan)] opacity-0 group-hover:opacity-40 transition-opacity' />
+      <div className='absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full opacity-40 transition-opacity group-hover:opacity-80' style={{ backgroundColor: board.color }} />
     </div>
   );
 }
@@ -76,17 +84,18 @@ function CreateBoardModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (title: string, description: string) => Promise<void>;
+  onCreate: (title: string, description: string, color: string) => Promise<void>;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [color, setColor] = useState(BOARD_COLORS[0]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
     setLoading(true);
-    await onCreate(title.trim(), description.trim());
+    await onCreate(title.trim(), description.trim(), color);
     setLoading(false);
   };
 
@@ -127,6 +136,26 @@ function CreateBoardModal({
               className='w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--border-focus)] transition-colors'
             />
           </div>
+          <div>
+            <label className='block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-2'>
+              Color
+            </label>
+            <div className='flex gap-2'>
+              {BOARD_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type='button'
+                  onClick={() => setColor(c)}
+                  className='w-7 h-7 rounded-full transition-transform hover:scale-110'
+                  style={{
+                    backgroundColor: c,
+                    boxShadow: color === c ? `0 0 0 2px var(--bg-surface), 0 0 0 4px ${c}` : 'none',
+                  }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+          </div>
           <div className='flex gap-3 pt-1'>
             <button
               type='button'
@@ -138,7 +167,8 @@ function CreateBoardModal({
             <button
               type='submit'
               disabled={loading || !title.trim()}
-              className='flex-1 rounded-xl bg-[var(--accent-cyan)] px-5 py-3 text-sm font-bold text-[var(--bg-base)] transition hover:brightness-110 disabled:opacity-40'
+              className='flex-1 rounded-xl px-5 py-3 text-sm font-bold text-[var(--bg-base)] transition hover:brightness-110 disabled:opacity-40'
+              style={{ backgroundColor: color }}
             >
               {loading ? 'Creating...' : 'Create'}
             </button>
@@ -170,8 +200,8 @@ export default function BoardsPage() {
     }
   }, [isLoggedIn]);
 
-  const handleCreate = async (title: string, description: string) => {
-    const newBoard = await api.createBoard(title, description || undefined);
+  const handleCreate = async (title: string, description: string, color: string) => {
+    const newBoard = await api.createBoard(title, description || undefined, color);
     setShowCreate(false);
     router.push(`/boards/${newBoard.id}`);
   };
@@ -212,7 +242,7 @@ export default function BoardsPage() {
             <div className='w-2 h-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_8px_var(--accent-cyan)]' />
             <div>
               <p className='text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-secondary)]'>
-                Kanban Studio
+                Kanban AI
               </p>
               <h1 className='font-display text-2xl font-bold text-[var(--text-primary)] mt-0.5'>
                 {user?.display_name ? `${user.display_name}'s Boards` : 'Your Boards'}

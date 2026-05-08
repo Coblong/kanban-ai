@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #080c14;
-  --bg-surface: #0e1220;
-  --bg-elevated: #141a27;
-  --bg-input: #1b2235;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.13);
-  --border-focus: rgba(0, 211, 255, 0.5);
+  --bg-base: #0b1020;
+  --bg-surface: #111927;
+  --bg-elevated: #192130;
+  --bg-input: #1e2840;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --border-focus: rgba(0, 211, 255, 0.55);
   --accent-cyan: #00d3ff;
-  --accent-cyan-glow: rgba(0, 211, 255, 0.1);
+  --accent-cyan-glow: rgba(0, 211, 255, 0.12);
   --accent-amber: #f59e0b;
   --accent-amber-glow: rgba(245, 158, 11, 0.15);
   --accent-violet: #7c3aed;
-  --accent-violet-bright: #a78bfa;
-  --accent-violet-glow: rgba(124, 58, 237, 0.14);
-  --text-primary: #d8dce8;
-  --text-secondary: #8a9ab5;
-  --text-muted: #3d4d63;
+  --accent-violet-bright: #b89ffe;
+  --accent-violet-glow: rgba(124, 58, 237, 0.16);
+  --text-primary: #eceff8;
+  --text-secondary: #a8bacf;
+  --text-muted: #627585;
   --red: #f87171;
   --red-dim: rgba(248, 113, 113, 0.1);
 
   /* Legacy variable aliases (used by older component references) */
-  --stroke: rgba(255, 255, 255, 0.07);
-  --navy-dark: #d8dce8;
-  --gray-text: #8a9ab5;
-  --surface: #0e1220;
-  --surface-strong: #141a27;
+  --stroke: rgba(255, 255, 255, 0.10);
+  --navy-dark: #eceff8;
+  --gray-text: #a8bacf;
+  --surface: #111927;
+  --surface-strong: #192130;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
   --primary-blue: #00d3ff;
   --secondary-purple: #7c3aed;
@@ -86,4 +86,20 @@ body {
 
 .card-highlighted {
   animation: highlight-pulse 1.5s ease-in-out;
+}
+
+@keyframes orb-throb {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 40px rgba(0, 211, 255, 0.2);
+  }
+  50% {
+    transform: scale(1.07);
+    box-shadow: 0 0 36px rgba(124, 58, 237, 0.85), 0 0 60px rgba(0, 211, 255, 0.35);
+  }
+}
+
+@keyframes orb-ring-expand {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.9); opacity: 0; }
 }

@@ -25,6 +25,7 @@ export type ApiBoard = {
   user_id: number;
   title: string;
   description: string | null;
+  color: string;
   columns: ApiColumn[];
   created_at: string;
   updated_at: string;
@@ -35,6 +36,7 @@ export type ApiBoardSummary = {
   user_id: number;
   title: string;
   description: string | null;
+  color: string;
   created_at: string;
   updated_at: string;
 };
@@ -103,15 +105,15 @@ export const api = {
   // Boards
   listBoards: () => request<ApiBoardSummary[]>('/api/boards'),
 
-  createBoard: (title: string, description?: string) =>
+  createBoard: (title: string, description?: string, color?: string) =>
     request<ApiBoard>('/api/boards', {
       method: 'POST',
-      body: JSON.stringify({ title, description: description || null }),
+      body: JSON.stringify({ title, description: description || null, color: color || '#00d3ff' }),
     }),
 
   getBoard: (boardId: number) => request<ApiBoard>(`/api/boards/${boardId}`),
 
-  updateBoard: (boardId: number, updates: { title?: string; description?: string }) =>
+  updateBoard: (boardId: number, updates: { title?: string; description?: string; color?: string }) =>
     request<ApiBoardSummary>(`/api/boards/${boardId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -163,5 +165,20 @@ export const api = {
     request<AiChatResponse>('/api/ai/chat', {
       method: 'POST',
       body: JSON.stringify({ message, board_id: boardId ?? null }),
+    }),
+
+  createVoiceSession: (boardId?: number) =>
+    request<{ publicKey: string; assistantId: string; systemPrompt: string }>('/api/ai/voice/session', {
+      method: 'POST',
+      body: JSON.stringify({ board_id: boardId ?? null }),
+    }),
+
+  processVoiceTranscript: (
+    boardId: number,
+    transcript: { role: string; content: string }[],
+  ) =>
+    request<AiChatResponse>('/api/ai/voice/process', {
+      method: 'POST',
+      body: JSON.stringify({ board_id: boardId, transcript }),
     }),
 };

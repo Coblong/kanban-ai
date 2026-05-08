@@ -7,13 +7,14 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  pointerWithin,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { useRouter } from 'next/navigation';
 import { KanbanColumn } from '@/components/KanbanColumn';
 import { KanbanCardPreview } from '@/components/KanbanCardPreview';
+import { CardEditor } from '@/components/CardEditor';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { boardFromApi, moveCard, numericId, type BoardData } from '@/lib/kanban';
 import { api, type ApiBoard, type CardOperation } from '@/lib/api';
@@ -24,12 +25,16 @@ type Props = { boardId: number };
 export const KanbanBoard = ({ boardId }: Props) => {
   const [board, setBoard] = useState<BoardData>({ columns: [], cards: {} });
   const [boardTitle, setBoardTitle] = useState('');
+  const [boardColor, setBoardColor] = useState('#00d3ff');
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [highlightedCardIds, setHighlightedCardIds] = useState<Set<string>>(new Set());
   const [addingColumn, setAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const cardEditorActionsRef = useRef<{ save: () => Promise<void> } | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { logout } = useAuth();
   const router = useRouter();
@@ -44,6 +49,7 @@ export const KanbanBoard = ({ boardId }: Props) => {
       .then((apiBoard) => {
         setBoard(boardFromApi(apiBoard));
         setBoardTitle(apiBoard.title);
+        setBoardColor(apiBoard.color ?? '#00d3ff');
         setLoading(false);
       })
       .catch(() => {
@@ -155,6 +161,15 @@ export const KanbanBoard = ({ boardId }: Props) => {
     }
   };
 
+  const handleSaveCard = async (cardId: string, title: string, details: string) => {
+    await api.updateCard(numericId(cardId), { title, description: details || undefined });
+    setBoard((prev) => ({
+      ...prev,
+      cards: { ...prev.cards, [cardId]: { ...prev.cards[cardId], title, details } },
+    }));
+    setEditingCardId(null);
+  };
+
   const handleBoardUpdate = useCallback(
     (apiBoard: ApiBoard, operations: CardOperation[]) => {
       const oldCardIds = new Set(Object.keys(board.cards));
@@ -182,6 +197,14 @@ export const KanbanBoard = ({ boardId }: Props) => {
     if (!title.trim()) return;
     try {
       await api.updateBoard(boardId, { title: title.trim() });
+    } catch {}
+  };
+
+  const handleColorChange = async (color: string) => {
+    setBoardColor(color);
+    setShowColorPicker(false);
+    try {
+      await api.updateBoard(boardId, { color });
     } catch {}
   };
 
@@ -247,6 +270,35 @@ export const KanbanBoard = ({ boardId }: Props) => {
 
         <div className='w-px h-5 bg-[var(--border)]' />
 
+        {/* Color picker */}
+        <div className='relative'>
+          <button
+            onClick={() => setShowColorPicker((v) => !v)}
+            className='w-4 h-4 rounded-full flex-shrink-0 transition-transform hover:scale-110'
+            style={{ backgroundColor: boardColor, boxShadow: `0 0 6px ${boardColor}80` }}
+            aria-label='Change board color'
+          />
+          {showColorPicker && (
+            <>
+              <div className='fixed inset-0 z-20' onClick={() => setShowColorPicker(false)} />
+              <div className='absolute top-7 left-1/2 -translate-x-1/2 z-30 flex gap-2 p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_8px_32px_rgba(0,0,0,0.6)]'>
+                {['#00d3ff','#7c3aed','#10b981','#f43f5e','#f97316','#f59e0b','#ec4899','#6366f1'].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => handleColorChange(c)}
+                    className='w-6 h-6 rounded-full transition-transform hover:scale-110'
+                    style={{
+                      backgroundColor: c,
+                      boxShadow: boardColor === c ? `0 0 0 2px var(--bg-surface), 0 0 0 3.5px ${c}` : 'none',
+                    }}
+                    aria-label={c}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
         <input
           value={boardTitle}
           onChange={(e) => setBoardTitle(e.target.value)}
@@ -285,10 +337,10 @@ export const KanbanBoard = ({ boardId }: Props) => {
       {/* Main content */}
       <div className='relative z-10 flex-1 flex overflow-hidden'>
         {/* Board area */}
-        <div className='flex-1 overflow-x-auto overflow-y-hidden'>
+        <div className='relative flex-1 overflow-x-auto overflow-y-hidden'>
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
@@ -306,6 +358,7 @@ export const KanbanBoard = ({ boardId }: Props) => {
                     onDeleteColumn={handleDeleteColumn}
                     onAddCard={handleAddCard}
                     onDeleteCard={handleDeleteCard}
+                    onEditCard={setEditingCardId}
                     highlightedCardIds={highlightedCardIds}
                   />
                 </div>
@@ -365,11 +418,27 @@ export const KanbanBoard = ({ boardId }: Props) => {
               ) : null}
             </DragOverlay>
           </DndContext>
+
+          {editingCardId && board.cards[editingCardId] && (
+            <CardEditor
+              card={board.cards[editingCardId]}
+              onClose={() => setEditingCardId(null)}
+              onSave={handleSaveCard}
+              actionsRef={cardEditorActionsRef}
+            />
+          )}
         </div>
 
         {/* AI Sidebar */}
-        <div className='w-[300px] flex-shrink-0 border-l border-[var(--border)]'>
-          <ChatSidebar boardId={boardId} onBoardUpdate={handleBoardUpdate} />
+        <div className='w-[300px] flex-shrink-0 h-full border-l border-[var(--border)] overflow-hidden'>
+          <ChatSidebar
+            boardId={boardId}
+            onBoardUpdate={handleBoardUpdate}
+            onOpenCard={(cardId) => setEditingCardId(`card-${cardId}`)}
+            openCardId={editingCardId ? Number(editingCardId.replace('card-', '')) : undefined}
+            onSaveOpenCard={async () => { await cardEditorActionsRef.current?.save(); }}
+            onCloseOpenCard={() => setEditingCardId(null)}
+          />
         </div>
       </div>
     </div>

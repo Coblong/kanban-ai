@@ -14,6 +14,7 @@ type KanbanColumnProps = {
   onDeleteColumn: (columnId: string) => void;
   onAddCard: (columnId: string, title: string, details: string) => void;
   onDeleteCard: (columnId: string, cardId: string) => void;
+  onEditCard: (cardId: string) => void;
   highlightedCardIds?: Set<string>;
 };
 
@@ -25,6 +26,7 @@ export const KanbanColumn = ({
   onDeleteColumn,
   onAddCard,
   onDeleteCard,
+  onEditCard,
   highlightedCardIds,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
@@ -84,12 +86,13 @@ export const KanbanColumn = ({
               key={card.id}
               card={card}
               onDelete={(cardId) => onDeleteCard(column.id, cardId)}
+              onEdit={onEditCard}
               isHighlighted={highlightedCardIds?.has(card.id)}
             />
           ))}
         </SortableContext>
         {cards.length === 0 && (
-          <div className='flex-1 flex items-center justify-center min-h-[80px] rounded-lg border border-dashed border-[var(--border)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]'>
+          <div className='flex items-center justify-center min-h-[120px] rounded-lg border border-dashed border-[var(--border)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]'>
             Drop here
           </div>
         )}

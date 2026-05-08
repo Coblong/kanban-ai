@@ -114,11 +114,11 @@ describe('KanbanBoard', () => {
     expect(within(column).queryByText('New card')).not.toBeInTheDocument();
   });
 
-  it('renders the AI chat sidebar', async () => {
+  it('renders the Kai chat sidebar', async () => {
     renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => screen.getAllByTestId(/column-/i));
-    expect(screen.getByRole('complementary', { name: /AI chat sidebar/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /AI Assistant/i })).toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: /Kai chat sidebar/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Kai/i })).toBeInTheDocument();
     expect(screen.getByLabelText('Message input')).toBeInTheDocument();
   });
 

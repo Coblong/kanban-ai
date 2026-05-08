@@ -81,8 +81,8 @@ def list_boards(conn: Connection = Depends(get_db), user_id: int = Depends(get_c
 @router.post("/boards", response_model=BoardFull, status_code=status.HTTP_201_CREATED)
 def create_board(body: BoardCreate, conn: Connection = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     cursor = conn.execute(
-        "INSERT INTO kanban_boards (user_id, title, description) VALUES (?, ?, ?)",
-        (user_id, body.title, body.description),
+        "INSERT INTO kanban_boards (user_id, title, description, color) VALUES (?, ?, ?, ?)",
+        (user_id, body.title, body.description, body.color),
     )
     board_id = cursor.lastrowid
     for pos, title in enumerate(["Backlog", "In Progress", "Review", "Done"]):
@@ -107,7 +107,7 @@ def update_board(board_id: int, body: BoardUpdate, conn: Connection = Depends(ge
     board = _row(conn, "SELECT * FROM kanban_boards WHERE id = ? AND user_id = ?", (board_id, user_id))
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
-    fields = {k: v for k, v in [("title", body.title), ("description", body.description)] if v is not None}
+    fields = {k: v for k, v in [("title", body.title), ("description", body.description), ("color", body.color)] if v is not None}
     if fields:
         set_clause = ", ".join(f"{k} = ?" for k in fields)
         conn.execute(

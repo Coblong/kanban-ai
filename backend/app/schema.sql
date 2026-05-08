@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS kanban_boards (
     user_id INTEGER NOT NULL,
     title TEXT NOT NULL DEFAULT 'My Board',
     description TEXT,
+    color TEXT NOT NULL DEFAULT '#00d3ff',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

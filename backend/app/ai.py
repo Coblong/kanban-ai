@@ -9,11 +9,12 @@ import httpx
 logger = logging.getLogger(__name__)
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+VAPI_BASE_URL = "https://api.vapi.ai"
 MODEL = "openai/gpt-oss-120b"
 MAX_HISTORY_MESSAGES = 20
 
 _SYSTEM_PROMPT_TEMPLATE = """\
-You are an AI assistant helping manage a Kanban board. You can view the current board state and perform card operations when asked.
+You are Kai, an AI assistant helping manage a Kanban board. You can view the current board state and perform card operations when asked.
 
 Current board state:
 {board_context}

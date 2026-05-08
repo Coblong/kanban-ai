@@ -1,14 +1,19 @@
 """AI API routes."""
 
 import logging
+import os
 from sqlite3 import Connection
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from ..ai import (
     OpenRouterError,
     add_to_history,
     build_system_prompt,
     chat,
+    format_board_context,
     get_history,
     parse_ai_response,
 )
@@ -125,6 +130,113 @@ async def chat_endpoint(
             updated_board = _fetch_full_board(conn, request.board_id, user_id)
         else:
             updated_board = _fetch_first_board(conn, user_id)
+        response_board = BoardFull.model_validate(updated_board) if updated_board else None
+    else:
+        response_board = None
+
+    return ChatResponse(
+        message=parsed["message"],
+        operations=executed_ops,
+        board=response_board,
+    )
+
+
+class VoiceSessionRequest(BaseModel):
+    board_id: Optional[int] = None
+
+
+@router.post("/voice/session")
+async def create_voice_session(
+    request: VoiceSessionRequest,
+    conn: Connection = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Return VAPI credentials and board-context system prompt for the browser SDK."""
+    public_key = os.environ.get("VAPI_PUBLIC_KEY")
+    assistant_id = os.environ.get("VAPI_ASSISTANT_ID")
+    if not public_key or not assistant_id:
+        raise HTTPException(status_code=500, detail="VAPI not configured. Set VAPI_PUBLIC_KEY and VAPI_ASSISTANT_ID in .env.")
+
+    if request.board_id is not None:
+        board = _fetch_full_board(conn, request.board_id, user_id)
+    else:
+        board = _fetch_first_board(conn, user_id)
+
+    system_prompt = (
+        "You are Kai, a voice assistant for a Kanban project board. "
+        "Help the user understand their tasks, give advice, and answer questions. "
+        "You have tools available to manage the board: create_card, move_card, update_card, delete_card. "
+        "Use them immediately when the user asks you to create, move, update, or delete cards — do not ask for confirmation. "
+        "Keep responses concise and conversational."
+    )
+    if board:
+        system_prompt += f"\n\nCurrent board:\n{format_board_context(board)}"
+
+    return {"publicKey": public_key, "assistantId": assistant_id, "systemPrompt": system_prompt}
+
+
+class VoiceTranscriptEntry(BaseModel):
+    role: str
+    content: str
+
+
+class VoiceProcessRequest(BaseModel):
+    board_id: Optional[int] = None
+    transcript: list[VoiceTranscriptEntry]
+
+
+@router.post("/voice/process", response_model=ChatResponse)
+async def process_voice_transcript(
+    request: VoiceProcessRequest,
+    conn: Connection = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Analyse a completed voice call transcript and execute any board operations the user requested."""
+    if not request.transcript:
+        raise HTTPException(status_code=400, detail="Empty transcript")
+
+    if request.board_id is not None:
+        board = _fetch_full_board(conn, request.board_id, user_id)
+    else:
+        board = _fetch_first_board(conn, user_id)
+
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+
+    transcript_text = "\n".join(
+        f"{entry.role.upper()}: {entry.content}" for entry in request.transcript
+    )
+
+    extraction_prompt = (
+        "The following is a transcript of a voice conversation with Kai, a Kanban board assistant. "
+        "Identify and execute any board operations the user explicitly requested. "
+        "Ignore suggestions, questions, or hypothetical mentions — only act on clear requests.\n\n"
+        f"Transcript:\n{transcript_text}"
+    )
+
+    messages = [
+        {"role": "system", "content": build_system_prompt(board)},
+        {"role": "user", "content": extraction_prompt},
+    ]
+
+    try:
+        raw_response = await chat(messages)
+    except OpenRouterError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    try:
+        parsed = parse_ai_response(raw_response)
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=f"AI returned invalid response: {e}")
+
+    executed_ops = _execute_operations(conn, user_id, parsed["operations"])
+
+    if executed_ops:
+        updated_board = (
+            _fetch_full_board(conn, request.board_id, user_id)
+            if request.board_id is not None
+            else _fetch_first_board(conn, user_id)
+        )
         response_board = BoardFull.model_validate(updated_board) if updated_board else None
     else:
         response_board = None

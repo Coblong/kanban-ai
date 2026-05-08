@@ -94,17 +94,20 @@ class BoardBase(BaseModel):
 
 class BoardCreate(BoardBase):
     description: Optional[str] = Field(None, max_length=500)
+    color: str = Field(default='#00d3ff', max_length=20)
 
 
 class BoardUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=500)
+    color: Optional[str] = Field(None, max_length=20)
 
 
 class Board(BoardBase):
     id: int
     user_id: int
     description: Optional[str] = None
+    color: str = '#00d3ff'
     created_at: datetime
     updated_at: datetime
 

@@ -9,6 +9,8 @@ services:
       - '8000:8000'
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - VAPI_PUBLIC_KEY=${VAPI_PUBLIC_KEY}
+      - VAPI_ASSISTANT_ID=${VAPI_ASSISTANT_ID}
       - ENVIRONMENT=development
     volumes:
       - ./frontend/src:/app/frontend/src
