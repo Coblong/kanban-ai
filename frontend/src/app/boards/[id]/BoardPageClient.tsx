@@ -33,8 +33,8 @@ export default function BoardPageClient() {
 
   if (!mounted || isLoading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <p className='text-sm text-[var(--gray-text)]'>Loading...</p>
+      <div className='h-screen flex items-center justify-center bg-[var(--bg-base)]'>
+        <p className='text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]'>Loading...</p>
       </div>
     );
   }

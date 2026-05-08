@@ -1,20 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --accent-yellow: #ecad0a;
-  --primary-blue: #209dd7;
-  --secondary-purple: #753991;
-  --navy-dark: #032147;
-  --gray-text: #888888;
-  --surface: #f7f8fb;
-  --surface-strong: #ffffff;
-  --stroke: rgba(3, 33, 71, 0.08);
-  --shadow: 0 18px 40px rgba(3, 33, 71, 0.12);
+  --bg-base: #080c14;
+  --bg-surface: #0e1220;
+  --bg-elevated: #141a27;
+  --bg-input: #1b2235;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.13);
+  --border-focus: rgba(0, 211, 255, 0.5);
+  --accent-cyan: #00d3ff;
+  --accent-cyan-glow: rgba(0, 211, 255, 0.1);
+  --accent-amber: #f59e0b;
+  --accent-amber-glow: rgba(245, 158, 11, 0.15);
+  --accent-violet: #7c3aed;
+  --accent-violet-bright: #a78bfa;
+  --accent-violet-glow: rgba(124, 58, 237, 0.14);
+  --text-primary: #d8dce8;
+  --text-secondary: #8a9ab5;
+  --text-muted: #3d4d63;
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.1);
+
+  /* Legacy variable aliases (used by older component references) */
+  --stroke: rgba(255, 255, 255, 0.07);
+  --navy-dark: #d8dce8;
+  --gray-text: #8a9ab5;
+  --surface: #0e1220;
+  --surface-strong: #141a27;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+  --primary-blue: #00d3ff;
+  --secondary-purple: #7c3aed;
+  --accent-yellow: #f59e0b;
 }
 
 @theme inline {
-  --color-background: var(--surface);
-  --color-foreground: var(--navy-dark);
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-body);
 }
 
@@ -22,13 +43,47 @@
   box-sizing: border-box;
 }
 
+html,
 body {
-  background: var(--surface);
-  color: var(--navy-dark);
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg-base);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--text-primary);
   font-family: var(--font-body), "Segoe UI", sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .font-display {
   font-family: var(--font-display), "Segoe UI", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@keyframes highlight-pulse {
+  0% { box-shadow: 0 0 0 1px var(--accent-amber), 0 0 8px rgba(245, 158, 11, 0.25); }
+  50% { box-shadow: 0 0 0 1px var(--accent-amber), 0 0 20px rgba(245, 158, 11, 0.4); }
+  100% { box-shadow: 0 0 0 1px var(--accent-amber), 0 0 8px rgba(245, 158, 11, 0.25); }
+}
+
+.card-highlighted {
+  animation: highlight-pulse 1.5s ease-in-out;
 }

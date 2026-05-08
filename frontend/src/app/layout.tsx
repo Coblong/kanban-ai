@@ -1,21 +1,21 @@
 import type { Metadata } from 'next';
-import { Manrope, Space_Grotesk } from 'next/font/google';
+import { Syne, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '../lib/auth/AuthContext';
 
-const displayFont = Space_Grotesk({
+const displayFont = Syne({
   variable: '--font-display',
   subsets: ['latin'],
 });
 
-const bodyFont = Manrope({
+const bodyFont = DM_Sans({
   variable: '--font-body',
   subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
   title: 'Kanban Studio',
-  description: 'A focused, single-board kanban workspace.',
+  description: 'A focused, AI-powered kanban workspace.',
 };
 
 export default function RootLayout({

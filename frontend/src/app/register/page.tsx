@@ -36,22 +36,35 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-[var(--surface)] px-4'>
-      <div className='pointer-events-none fixed left-0 top-0 h-[500px] w-[500px] -translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle,_rgba(32,157,215,0.18)_0%,_transparent_70%)]' />
-      <div className='pointer-events-none fixed bottom-0 right-0 h-[500px] w-[500px] translate-x-1/3 translate-y-1/3 rounded-full bg-[radial-gradient(circle,_rgba(117,57,145,0.15)_0%,_transparent_70%)]' />
+    <div className='min-h-screen flex items-center justify-center px-4'>
+      <div className='pointer-events-none fixed inset-0 overflow-hidden'>
+        <div className='absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[var(--accent-cyan)] opacity-[0.05] blur-3xl' />
+        <div className='absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-[var(--accent-violet)] opacity-[0.06] blur-3xl' />
+      </div>
 
-      <div className='relative w-full max-w-md'>
-        <div className='rounded-[32px] border border-[var(--stroke)] bg-white p-10 shadow-[var(--shadow)]'>
-          <div className='mb-8'>
-            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gray-text)]'>Get started</p>
-            <h1 className='mt-2 font-display text-3xl font-semibold text-[var(--navy-dark)]'>Create account</h1>
-            <p className='mt-2 text-sm text-[var(--gray-text)]'>Your board will be ready in seconds</p>
+      <div className='relative w-full max-w-sm'>
+        <div className='mb-8 text-center'>
+          <div className='inline-flex items-center gap-2 mb-6'>
+            <div className='w-2 h-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_8px_var(--accent-cyan)]' />
+            <span className='font-display text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-secondary)]'>
+              Kanban Studio
+            </span>
           </div>
+          <h1 className='font-display text-3xl font-bold text-[var(--text-primary)]'>Create account</h1>
+          <p className='mt-2 text-sm text-[var(--text-secondary)]'>Your board will be ready in seconds</p>
+        </div>
 
-          <form onSubmit={handleSubmit} className='space-y-5'>
+        <div className='rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-8 shadow-[0_8px_40px_rgba(0,0,0,0.6)]'>
+          <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
             <div>
-              <label htmlFor='display_name' className='block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] mb-2'>
-                Name <span className='text-[var(--gray-text)] normal-case tracking-normal font-normal'>(optional)</span>
+              <label
+                htmlFor='display_name'
+                className='block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-2'
+              >
+                Name{' '}
+                <span className='text-[var(--text-muted)] normal-case tracking-normal font-normal'>
+                  (optional)
+                </span>
               </label>
               <input
                 id='display_name'
@@ -60,12 +73,15 @@ export default function RegisterPage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder='Your name'
-                className='w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--navy-dark)] placeholder:text-[var(--gray-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition'
+                className='w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--border-focus)] transition-colors'
               />
             </div>
 
             <div>
-              <label htmlFor='email' className='block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] mb-2'>
+              <label
+                htmlFor='email'
+                className='block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-2'
+              >
                 Username
               </label>
               <input
@@ -75,12 +91,15 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder='choose a username'
-                className='w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--navy-dark)] placeholder:text-[var(--gray-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition'
+                className='w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--border-focus)] transition-colors'
               />
             </div>
 
             <div>
-              <label htmlFor='password' className='block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] mb-2'>
+              <label
+                htmlFor='password'
+                className='block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-2'
+              >
                 Password
               </label>
               <input
@@ -90,28 +109,28 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder='at least 6 characters'
-                className='w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--navy-dark)] placeholder:text-[var(--gray-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition'
+                className='w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--border-focus)] transition-colors'
               />
             </div>
 
             {error && (
-              <div className='rounded-2xl bg-red-50 border border-red-100 px-4 py-3'>
-                <p className='text-sm text-red-600'>{error}</p>
+              <div className='rounded-xl bg-[var(--red-dim)] border border-[var(--red)]/20 px-4 py-3'>
+                <p className='text-xs text-[var(--red)]'>{error}</p>
               </div>
             )}
 
             <button
               type='submit'
               disabled={isLoading}
-              className='w-full rounded-2xl bg-[var(--navy-dark)] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='w-full rounded-xl bg-[var(--accent-cyan)] px-5 py-3 text-sm font-bold text-[var(--bg-base)] transition hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed'
             >
               {isLoading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
-          <p className='mt-6 text-center text-sm text-[var(--gray-text)]'>
+          <p className='mt-6 text-center text-xs text-[var(--text-secondary)]'>
             Already have an account?{' '}
-            <Link href='/login' className='font-semibold text-[var(--primary-blue)] hover:underline'>
+            <Link href='/login' className='font-semibold text-[var(--accent-cyan)] hover:underline'>
               Sign in
             </Link>
           </p>
