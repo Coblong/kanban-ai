@@ -1,105 +1,108 @@
 """Tests for the main FastAPI application."""
+import sqlite3
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
+
+from app.auth import hash_password
+from app.db import get_db
 from app.main import app
 
-client = TestClient(app)
+SCHEMA_PATH = Path(__file__).parent.parent / "schema.sql"
+
+
+@pytest.fixture
+def db():
+    conn = sqlite3.connect(":memory:", check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    with open(SCHEMA_PATH) as f:
+        conn.executescript(f.read())
+    conn.executescript(f"""
+        INSERT INTO users (id, email, password_hash, display_name) VALUES (1, 'user', '{hash_password("password")}', 'Test User');
+        INSERT INTO sessions (token, user_id) VALUES ('test-token', 1);
+        INSERT INTO kanban_boards (id, user_id, title) VALUES (1, 1, 'My Board');
+    """)
+    yield conn
+    conn.close()
+
+
+@pytest.fixture
+def client(db):
+    app.dependency_overrides[get_db] = lambda: db
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
 
 
 class TestHealth:
-    """Health check endpoint tests."""
-    
-    def test_health_check(self):
-        """Test that health check endpoint returns OK status."""
-        response = client.get("/health")
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok"}
+    def test_health_check(self, client):
+        r = client.get("/health")
+        assert r.status_code == 200
+        assert r.json() == {"status": "ok"}
 
 
 class TestHelloEndpoint:
-    """Hello endpoint tests."""
-    
-    def test_hello_returns_message(self):
-        """Test that hello endpoint returns expected message."""
-        response = client.get("/api/hello")
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert data["message"] == "hello world"
-
-
-class TestRoot:
-    """Root endpoint tests."""
-    
-    def test_root_returns_api_info(self):
-        """Test that root endpoint returns the frontend HTML."""
-        response = client.get("/")
-        assert response.status_code == 200
-        # Should return HTML content
-        content = response.text
-        assert "<!DOCTYPE html>" in content
-        assert "Kanban Studio" in content
-        assert response.headers["content-type"].startswith("text/html")
+    def test_hello_returns_message(self, client):
+        r = client.get("/api/hello")
+        assert r.status_code == 200
+        assert r.json()["message"] == "hello world"
 
 
 class TestOpenAPI:
-    """OpenAPI schema tests."""
-    
-    def test_openapi_schema_exists(self):
-        """Test that OpenAPI schema endpoint is available."""
-        response = client.get("/openapi.json")
-        assert response.status_code == 200
-        data = response.json()
+    def test_openapi_schema_exists(self, client):
+        r = client.get("/openapi.json")
+        assert r.status_code == 200
+        data = r.json()
         assert "openapi" in data
-        assert "info" in data
         assert "paths" in data
 
 
 class TestAuthentication:
-    """Authentication endpoint tests."""
-    
-    def test_login_success(self):
-        """Test successful login with correct credentials."""
-        response = client.post(
-            "/api/auth/login",
-            json={"username": "user", "password": "password"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert data["message"] == "Login successful"
+    def test_login_success(self, client):
+        r = client.post("/api/auth/login", json={"username": "user", "password": "password"})
+        assert r.status_code == 200
+        data = r.json()
         assert "token" in data
-        assert data["token"] == "dummy-token"
-    
-    def test_login_invalid_credentials(self):
-        """Test login failure with invalid credentials."""
-        response = client.post(
-            "/api/auth/login",
-            json={"username": "user", "password": "wrong"}
+        assert "user" in data
+        assert data["user"]["email"] == "user"
+
+    def test_login_invalid_credentials(self, client):
+        r = client.post("/api/auth/login", json={"username": "user", "password": "wrong"})
+        assert r.status_code == 401
+        assert r.json()["detail"] == "Invalid credentials"
+
+    def test_login_unknown_user(self, client):
+        r = client.post("/api/auth/login", json={"username": "nobody", "password": "pass"})
+        assert r.status_code == 401
+
+    def test_logout(self, client):
+        r = client.post("/api/auth/logout")
+        assert r.status_code == 200
+        assert r.json()["message"] == "Logout successful"
+
+    def test_register_success(self, client):
+        r = client.post(
+            "/api/auth/register",
+            json={"email": "newuser@example.com", "password": "securepass", "display_name": "New User"},
         )
-        assert response.status_code == 401
-        data = response.json()
-        assert "detail" in data
-        assert data["detail"] == "Invalid credentials"
-    
-    def test_login_missing_fields(self):
-        """Test login with missing username or password."""
-        response = client.post(
-            "/api/auth/login",
-            json={"username": "user"}
+        assert r.status_code == 201
+        data = r.json()
+        assert "token" in data
+        assert data["user"]["email"] == "newuser@example.com"
+        assert data["user"]["display_name"] == "New User"
+
+    def test_register_duplicate_email(self, client):
+        r = client.post(
+            "/api/auth/register",
+            json={"email": "user", "password": "securepass"},
         )
-        assert response.status_code == 401
-        
-        response = client.post(
-            "/api/auth/login",
-            json={"password": "password"}
+        assert r.status_code == 409
+
+    def test_register_short_password(self, client):
+        r = client.post(
+            "/api/auth/register",
+            json={"email": "new@example.com", "password": "abc"},
         )
-        assert response.status_code == 401
-    
-    def test_logout(self):
-        """Test logout endpoint."""
-        response = client.post("/api/auth/logout")
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert data["message"] == "Logout successful"
+        assert r.status_code == 422

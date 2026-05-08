@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { api } from '../../lib/api';
 
-export default function LoginPage() {
-  const [username, setUsername] = useState('');
+export default function RegisterPage() {
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,13 +18,18 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
     setIsLoading(true);
     try {
-      const data = await api.login(username, password);
+      const data = await api.register(email, password, displayName || undefined);
       login(data.token, data.user);
       router.push('/boards');
-    } catch {
-      setError('Invalid username or password.');
+    } catch (err: unknown) {
+      const status = err instanceof Error && err.message.includes('409');
+      setError(status ? 'That username is already taken.' : 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -37,24 +43,38 @@ export default function LoginPage() {
       <div className='relative w-full max-w-md'>
         <div className='rounded-[32px] border border-[var(--stroke)] bg-white p-10 shadow-[var(--shadow)]'>
           <div className='mb-8'>
-            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gray-text)]'>Welcome back TESTING</p>
-            <h1 className='mt-2 font-display text-3xl font-semibold text-[var(--navy-dark)]'>Sign in</h1>
-            <p className='mt-2 text-sm text-[var(--gray-text)]'>Continue to your boards</p>
+            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gray-text)]'>Get started</p>
+            <h1 className='mt-2 font-display text-3xl font-semibold text-[var(--navy-dark)]'>Create account</h1>
+            <p className='mt-2 text-sm text-[var(--gray-text)]'>Your board will be ready in seconds</p>
           </div>
 
           <form onSubmit={handleSubmit} className='space-y-5'>
             <div>
-              <label htmlFor='username' className='block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] mb-2'>
+              <label htmlFor='display_name' className='block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] mb-2'>
+                Name <span className='text-[var(--gray-text)] normal-case tracking-normal font-normal'>(optional)</span>
+              </label>
+              <input
+                id='display_name'
+                type='text'
+                autoFocus
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder='Your name'
+                className='w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--navy-dark)] placeholder:text-[var(--gray-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition'
+              />
+            </div>
+
+            <div>
+              <label htmlFor='email' className='block text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] mb-2'>
                 Username
               </label>
               <input
-                id='username'
+                id='email'
                 type='text'
                 required
-                autoFocus
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder='your username'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder='choose a username'
                 className='w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--navy-dark)] placeholder:text-[var(--gray-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition'
               />
             </div>
@@ -69,7 +89,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder='••••••••'
+                placeholder='at least 6 characters'
                 className='w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--navy-dark)] placeholder:text-[var(--gray-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition'
               />
             </div>
@@ -85,14 +105,14 @@ export default function LoginPage() {
               disabled={isLoading}
               className='w-full rounded-2xl bg-[var(--navy-dark)] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
           <p className='mt-6 text-center text-sm text-[var(--gray-text)]'>
-            No account?{' '}
-            <Link href='/register' className='font-semibold text-[var(--primary-blue)] hover:underline'>
-              Create one
+            Already have an account?{' '}
+            <Link href='/login' className='font-semibold text-[var(--primary-blue)] hover:underline'>
+              Sign in
             </Link>
           </p>
         </div>

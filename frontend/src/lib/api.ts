@@ -1,3 +1,9 @@
+export type ApiUser = {
+  id: number;
+  email: string;
+  display_name: string | null;
+};
+
 export type ApiCard = {
   id: number;
   column_id: number;
@@ -18,7 +24,19 @@ export type ApiBoard = {
   id: number;
   user_id: number;
   title: string;
+  description: string | null;
   columns: ApiColumn[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type ApiBoardSummary = {
+  id: number;
+  user_id: number;
+  title: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type CardOperation = {
@@ -36,14 +54,21 @@ export type AiChatResponse = {
   board: ApiBoard | null;
 };
 
+export type AuthResponse = {
+  user: ApiUser;
+  token: string;
+};
+
 function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const token = localStorage.getItem('authToken');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -59,8 +84,59 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  getBoard: () => request<ApiBoard>('/api/board'),
+  // Auth
+  login: (username: string, password: string) =>
+    request<AuthResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
 
+  register: (email: string, password: string, display_name?: string) =>
+    request<AuthResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, display_name }),
+    }),
+
+  logout: () =>
+    request<void>('/api/auth/logout', { method: 'POST' }),
+
+  // Boards
+  listBoards: () => request<ApiBoardSummary[]>('/api/boards'),
+
+  createBoard: (title: string, description?: string) =>
+    request<ApiBoard>('/api/boards', {
+      method: 'POST',
+      body: JSON.stringify({ title, description: description || null }),
+    }),
+
+  getBoard: (boardId: number) => request<ApiBoard>(`/api/boards/${boardId}`),
+
+  updateBoard: (boardId: number, updates: { title?: string; description?: string }) =>
+    request<ApiBoardSummary>(`/api/boards/${boardId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    }),
+
+  deleteBoard: (boardId: number) =>
+    request<void>(`/api/boards/${boardId}`, { method: 'DELETE' }),
+
+  // Columns
+  createColumn: (boardId: number, title: string) =>
+    request<ApiColumn>('/api/columns', {
+      method: 'POST',
+      body: JSON.stringify({ board_id: boardId, title }),
+    }),
+
+  renameColumn: (columnId: number, title: string) =>
+    request(`/api/column/${columnId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title }),
+    }),
+
+  deleteColumn: (columnId: number) =>
+    request<void>(`/api/column/${columnId}`, { method: 'DELETE' }),
+
+  // Cards
   createCard: (columnId: number, title: string, description?: string) =>
     request<ApiCard>('/api/card', {
       method: 'POST',
@@ -82,15 +158,10 @@ export const api = {
       body: JSON.stringify({ column_id: columnId, position }),
     }),
 
-  renameColumn: (columnId: number, title: string) =>
-    request(`/api/column/${columnId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ title }),
-    }),
-
-  aiChat: (message: string) =>
+  // AI
+  aiChat: (message: string, boardId?: number) =>
     request<AiChatResponse>('/api/ai/chat', {
       method: 'POST',
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, board_id: boardId ?? null }),
     }),
 };

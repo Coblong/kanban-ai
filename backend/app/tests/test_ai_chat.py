@@ -9,11 +9,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.ai import clear_history
+from app.auth import hash_password
 from app.db import get_db
 from app.main import app
 
 SCHEMA_PATH = Path(__file__).parent.parent / "schema.sql"
-AUTH = {"Authorization": "Bearer dummy-token"}
+AUTH = {"Authorization": "Bearer test-token"}
 
 
 @pytest.fixture
@@ -23,8 +24,9 @@ def client():
     conn.execute("PRAGMA foreign_keys = ON")
     with open(SCHEMA_PATH) as f:
         conn.executescript(f.read())
-    conn.executescript("""
-        INSERT INTO users (id, email, password_hash) VALUES (1, 'user', 'password');
+    conn.executescript(f"""
+        INSERT INTO users (id, email, password_hash) VALUES (1, 'user', '{hash_password("password")}');
+        INSERT INTO sessions (token, user_id) VALUES ('test-token', 1);
         INSERT INTO kanban_boards (id, user_id, title) VALUES (1, 1, 'My Board');
         INSERT INTO kanban_columns (id, board_id, title, position) VALUES (1, 1, 'To Do', 0);
         INSERT INTO kanban_columns (id, board_id, title, position) VALUES (2, 1, 'In Progress', 1);

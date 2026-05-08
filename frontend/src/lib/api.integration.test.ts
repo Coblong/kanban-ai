@@ -22,18 +22,18 @@ function mockFetch(body: unknown, status = 200) {
 }
 
 describe('api.getBoard', () => {
-  it('calls GET /api/board with auth header', async () => {
-    mockFetch({ id: 1, user_id: 1, title: 'Board', columns: [] });
-    const board = await api.getBoard();
+  it('calls GET /api/boards/:id with auth header', async () => {
+    mockFetch({ id: 1, user_id: 1, title: 'Board', description: null, columns: [] });
+    const board = await api.getBoard(1);
     expect(board.title).toBe('Board');
-    expect(global.fetch).toHaveBeenCalledWith('/api/board', expect.objectContaining({
+    expect(global.fetch).toHaveBeenCalledWith('/api/boards/1', expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer dummy-token' }),
     }));
   });
 
   it('throws on non-OK response', async () => {
     mockFetch({ detail: 'Not authenticated' }, 401);
-    await expect(api.getBoard()).rejects.toThrow('API error 401');
+    await expect(api.getBoard(1)).rejects.toThrow('API error 401');
   });
 });
 

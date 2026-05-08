@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Use static export for deployment in Docker with FastAPI
-  output: 'export',
+  // Static export only for production builds (Docker/FastAPI); dev server runs dynamically
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   // Enable React strict mode for development
   reactStrictMode: true,
   // Optimize images

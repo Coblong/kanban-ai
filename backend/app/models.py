@@ -7,17 +7,29 @@ class UserBase(BaseModel):
     email: str
 
 
+class UserRegister(BaseModel):
+    email: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=6, max_length=128)
+    display_name: Optional[str] = Field(None, max_length=100)
+
+
 class UserCreate(UserBase):
     password: str
 
 
 class User(UserBase):
     id: int
+    display_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=6, max_length=128)
 
 
 class CardBase(BaseModel):
@@ -58,7 +70,6 @@ class ColumnBase(BaseModel):
 
 class ColumnCreate(ColumnBase):
     board_id: int
-    position: int
 
 
 class ColumnUpdate(BaseModel):
@@ -82,16 +93,18 @@ class BoardBase(BaseModel):
 
 
 class BoardCreate(BoardBase):
-    pass
+    description: Optional[str] = Field(None, max_length=500)
 
 
 class BoardUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=500)
 
 
 class Board(BoardBase):
     id: int
     user_id: int
+    description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -107,7 +120,7 @@ class BoardFull(Board):
 
 
 class LoginRequest(BaseModel):
-    email: str
+    username: str
     password: str
 
 
@@ -141,6 +154,7 @@ class CardOperation(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
+    board_id: Optional[int] = None
 
 
 class ChatResponse(BaseModel):

@@ -14,17 +14,14 @@ from ..ai import (
 )
 from ..db import get_db
 from ..models import BoardFull, CardOperation, ChatRequest, ChatResponse
-from .board import _fetch_full_board, get_current_user_id
+from .board import _fetch_full_board, _fetch_first_board, get_current_user_id
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai")
 
 
-
-def _execute_operations(
-    conn: Connection, user_id: int, ops: list[dict]
-) -> list[CardOperation]:
+def _execute_operations(conn: Connection, user_id: int, ops: list[dict]) -> list[CardOperation]:
     """Execute AI-requested operations. Returns those successfully executed."""
     from ..models import CardCreate, CardMove, CardUpdate
     from .board import (
@@ -93,7 +90,11 @@ async def chat_endpoint(
     user_id: int = Depends(get_current_user_id),
 ):
     """AI chat with board context. The AI may create, move, update, or delete cards."""
-    board = _fetch_full_board(conn, user_id)
+    if request.board_id is not None:
+        board = _fetch_full_board(conn, request.board_id, user_id)
+    else:
+        board = _fetch_first_board(conn, user_id)
+
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
@@ -120,7 +121,10 @@ async def chat_endpoint(
     add_to_history(user_id, "assistant", raw_response)
 
     if executed_ops:
-        updated_board = _fetch_full_board(conn, user_id)
+        if request.board_id is not None:
+            updated_board = _fetch_full_board(conn, request.board_id, user_id)
+        else:
+            updated_board = _fetch_first_board(conn, user_id)
         response_board = BoardFull.model_validate(updated_board) if updated_board else None
     else:
         response_board = None

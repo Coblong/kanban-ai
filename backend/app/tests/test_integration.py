@@ -6,11 +6,12 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth import hash_password
 from app.db import get_db
 from app.main import app
 
 SCHEMA_PATH = Path(__file__).parent.parent / "schema.sql"
-AUTH = {"Authorization": "Bearer dummy-token"}
+AUTH = {"Authorization": "Bearer test-token"}
 
 
 @pytest.fixture
@@ -20,8 +21,9 @@ def client():
     conn.execute("PRAGMA foreign_keys = ON")
     with open(SCHEMA_PATH) as f:
         conn.executescript(f.read())
-    conn.executescript("""
-        INSERT INTO users (id, email, password_hash) VALUES (1, 'user', 'password');
+    conn.executescript(f"""
+        INSERT INTO users (id, email, password_hash) VALUES (1, 'user', '{hash_password("password")}');
+        INSERT INTO sessions (token, user_id) VALUES ('test-token', 1);
         INSERT INTO kanban_boards (id, user_id, title) VALUES (1, 1, 'My Board');
         INSERT INTO kanban_columns (id, board_id, title, position) VALUES (1, 1, 'To Do', 0);
         INSERT INTO kanban_columns (id, board_id, title, position) VALUES (2, 1, 'In Progress', 1);
@@ -49,9 +51,10 @@ class TestFullBoardFlow:
         # Login
         r = client.post("/api/auth/login", json={"username": "user", "password": "password"})
         assert r.status_code == 200
-        assert r.json()["token"] == "dummy-token"
+        token = r.json()["token"]
+        assert token  # real token, not dummy
 
-        # Fetch board
+        # Fetch board using fixed test token (already in session table)
         r = client.get("/api/board", headers=AUTH)
         assert r.status_code == 200
         board = r.json()

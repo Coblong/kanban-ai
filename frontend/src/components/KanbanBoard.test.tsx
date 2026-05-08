@@ -11,30 +11,39 @@ const mockDeleteCard = vi.fn();
 const mockRenameColumn = vi.fn();
 const mockMoveCard = vi.fn();
 const mockAiChat = vi.fn();
+const mockLogout = vi.fn();
+const mockCreateColumn = vi.fn();
+const mockDeleteColumn = vi.fn();
+const mockUpdateBoard = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   api: {
-    getBoard: () => mockGetBoard(),
+    getBoard: (...args: unknown[]) => mockGetBoard(...args),
     createCard: (...args: unknown[]) => mockCreateCard(...args),
     deleteCard: (...args: unknown[]) => mockDeleteCard(...args),
     renameColumn: (...args: unknown[]) => mockRenameColumn(...args),
     moveCard: (...args: unknown[]) => mockMoveCard(...args),
     aiChat: (...args: unknown[]) => mockAiChat(...args),
+    logout: () => mockLogout(),
+    createColumn: (...args: unknown[]) => mockCreateColumn(...args),
+    deleteColumn: (...args: unknown[]) => mockDeleteColumn(...args),
+    updateBoard: (...args: unknown[]) => mockUpdateBoard(...args),
   },
 }));
 
-// Mock Next.js router
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
 }));
 
 const mockBoard: ApiBoard = {
   id: 1,
   user_id: 1,
   title: 'My Board',
+  description: null,
+  created_at: '2024-01-01T00:00:00',
+  updated_at: '2024-01-01T00:00:00',
   columns: [
     { id: 1, board_id: 1, title: 'To Do', position: 0, cards: [] },
     {
@@ -60,16 +69,20 @@ describe('KanbanBoard', () => {
     mockRenameColumn.mockResolvedValue({});
     mockMoveCard.mockResolvedValue({});
     mockAiChat.mockResolvedValue({ message: 'Done', operations: [], board: null });
+    mockLogout.mockResolvedValue(undefined);
+    mockCreateColumn.mockResolvedValue({ id: 10, board_id: 1, title: 'New Column', position: 3, cards: [] });
+    mockDeleteColumn.mockResolvedValue(undefined);
+    mockUpdateBoard.mockResolvedValue({});
     mockPush.mockReset();
   });
 
   it('renders three columns from the API', async () => {
-    renderWithAuth(<KanbanBoard />);
+    renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => expect(screen.getAllByTestId(/column-/i)).toHaveLength(3));
   });
 
   it('renames a column', async () => {
-    renderWithAuth(<KanbanBoard />);
+    renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => screen.getAllByTestId(/column-/i));
     const column = screen.getAllByTestId(/column-/i)[0];
     const input = within(column).getByLabelText('Column title');
@@ -79,7 +92,7 @@ describe('KanbanBoard', () => {
   });
 
   it('adds and removes a card', async () => {
-    renderWithAuth(<KanbanBoard />);
+    renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => screen.getAllByTestId(/column-/i));
 
     const column = screen.getAllByTestId(/column-/i)[0];
@@ -102,7 +115,7 @@ describe('KanbanBoard', () => {
   });
 
   it('renders the AI chat sidebar', async () => {
-    renderWithAuth(<KanbanBoard />);
+    renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => screen.getAllByTestId(/column-/i));
     expect(screen.getByRole('complementary', { name: /AI chat sidebar/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /AI Assistant/i })).toBeInTheDocument();
@@ -110,7 +123,7 @@ describe('KanbanBoard', () => {
   });
 
   it('board updates when AI returns a new board', async () => {
-    const updatedBoard = {
+    const updatedBoard: ApiBoard = {
       ...mockBoard,
       columns: [
         {
@@ -126,7 +139,7 @@ describe('KanbanBoard', () => {
     };
     mockAiChat.mockResolvedValue({ message: 'Created a card', operations: [], board: updatedBoard });
 
-    renderWithAuth(<KanbanBoard />);
+    renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => screen.getAllByTestId(/column-/i));
 
     const input = screen.getByLabelText('Message input');
@@ -137,14 +150,7 @@ describe('KanbanBoard', () => {
   });
 
   it('shows logout button and handles logout', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ message: 'Logout successful' }),
-      }),
-    ) as ReturnType<typeof vi.fn>;
-
-    renderWithAuth(<KanbanBoard />);
+    renderWithAuth(<KanbanBoard boardId={1} />);
     await waitFor(() => screen.getByRole('button', { name: /logout/i }));
 
     const logoutButton = screen.getByRole('button', { name: /logout/i });
@@ -152,7 +158,7 @@ describe('KanbanBoard', () => {
 
     await userEvent.click(logoutButton);
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' });
+    expect(mockLogout).toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith('/login');
   });
 });

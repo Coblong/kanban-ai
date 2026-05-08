@@ -10,10 +10,11 @@ type Message = {
 };
 
 type ChatSidebarProps = {
+  boardId: number;
   onBoardUpdate: (board: ApiBoard, operations: CardOperation[]) => void;
 };
 
-export const ChatSidebar = ({ onBoardUpdate }: ChatSidebarProps) => {
+export const ChatSidebar = ({ boardId, onBoardUpdate }: ChatSidebarProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,7 @@ export const ChatSidebar = ({ onBoardUpdate }: ChatSidebarProps) => {
     setLoading(true);
 
     try {
-      const res = await api.aiChat(text);
+      const res = await api.aiChat(text, boardId);
       setMessages((prev) => [...prev, { role: 'assistant', content: res.message }]);
       if (res.board) {
         onBoardUpdate(res.board, res.operations);

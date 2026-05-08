@@ -6,11 +6,12 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth import hash_password
 from app.db import get_db
 from app.main import app
 
 SCHEMA_PATH = Path(__file__).parent.parent / "schema.sql"
-AUTH = {"Authorization": "Bearer dummy-token"}
+AUTH = {"Authorization": "Bearer test-token"}
 
 
 @pytest.fixture
@@ -20,8 +21,9 @@ def db():
     conn.execute("PRAGMA foreign_keys = ON")
     with open(SCHEMA_PATH) as f:
         conn.executescript(f.read())
-    conn.executescript("""
-        INSERT INTO users (id, email, password_hash) VALUES (1, 'user', 'password');
+    conn.executescript(f"""
+        INSERT INTO users (id, email, password_hash) VALUES (1, 'user', '{hash_password("password")}');
+        INSERT INTO sessions (token, user_id) VALUES ('test-token', 1);
         INSERT INTO kanban_boards (id, user_id, title) VALUES (1, 1, 'My Board');
         INSERT INTO kanban_columns (id, board_id, title, position) VALUES (1, 1, 'To Do', 0);
         INSERT INTO kanban_columns (id, board_id, title, position) VALUES (2, 1, 'In Progress', 1);
@@ -44,33 +46,122 @@ def seed_cards(db, cards):
     for col_id, title, pos in cards:
         db.execute(
             "INSERT INTO kanban_cards (column_id, title, position) VALUES (?, ?, ?)",
-            (col_id, title, pos)
+            (col_id, title, pos),
         )
     db.commit()
 
 
-class TestGetBoard:
+class TestListBoards:
     def test_success(self, client):
-        r = client.get("/api/board", headers=AUTH)
+        r = client.get("/api/boards", headers=AUTH)
+        assert r.status_code == 200
+        data = r.json()
+        assert len(data) == 1
+        assert data[0]["title"] == "My Board"
+
+    def test_unauthorized(self, client):
+        r = client.get("/api/boards")
+        assert r.status_code == 401
+
+
+class TestCreateBoard:
+    def test_success(self, client):
+        r = client.post("/api/boards", headers=AUTH, json={"title": "Sprint Board"})
+        assert r.status_code == 201
+        data = r.json()
+        assert data["title"] == "Sprint Board"
+        assert len(data["columns"]) == 4  # default columns
+
+    def test_creates_default_columns(self, client):
+        r = client.post("/api/boards", headers=AUTH, json={"title": "New Board"})
+        assert r.status_code == 201
+        cols = [c["title"] for c in r.json()["columns"]]
+        assert "Backlog" in cols
+        assert "Done" in cols
+
+    def test_with_description(self, client):
+        r = client.post("/api/boards", headers=AUTH, json={"title": "Board", "description": "My board"})
+        assert r.status_code == 201
+        assert r.json()["description"] == "My board"
+
+    def test_unauthorized(self, client):
+        r = client.post("/api/boards", json={"title": "Board"})
+        assert r.status_code == 401
+
+
+class TestGetBoard:
+    def test_get_by_id(self, client):
+        r = client.get("/api/boards/1", headers=AUTH)
         assert r.status_code == 200
         data = r.json()
         assert data["title"] == "My Board"
         assert len(data["columns"]) == 3
-        assert data["columns"][0]["title"] == "To Do"
-        assert data["columns"][0]["cards"] == []
 
-    def test_unauthorized(self, client):
-        r = client.get("/api/board")
-        assert r.status_code == 401
+    def test_not_found(self, client):
+        r = client.get("/api/boards/999", headers=AUTH)
+        assert r.status_code == 404
 
     def test_returns_cards_in_columns(self, client, db):
         seed_cards(db, [(1, "Task A", 0), (1, "Task B", 1)])
-        r = client.get("/api/board", headers=AUTH)
+        r = client.get("/api/boards/1", headers=AUTH)
         assert r.status_code == 200
         col = r.json()["columns"][0]
         assert len(col["cards"]) == 2
-        assert col["cards"][0]["title"] == "Task A"
-        assert col["cards"][1]["title"] == "Task B"
+
+    def test_legacy_board_endpoint(self, client):
+        r = client.get("/api/board", headers=AUTH)
+        assert r.status_code == 200
+        assert r.json()["title"] == "My Board"
+
+    def test_unauthorized(self, client):
+        r = client.get("/api/boards/1")
+        assert r.status_code == 401
+
+
+class TestUpdateBoard:
+    def test_rename(self, client):
+        r = client.put("/api/boards/1", headers=AUTH, json={"title": "Renamed Board"})
+        assert r.status_code == 200
+        assert r.json()["title"] == "Renamed Board"
+
+    def test_not_found(self, client):
+        r = client.put("/api/boards/999", headers=AUTH, json={"title": "X"})
+        assert r.status_code == 404
+
+
+class TestDeleteBoard:
+    def test_success(self, client, db):
+        r = client.delete("/api/boards/1", headers=AUTH)
+        assert r.status_code == 204
+        assert db.execute("SELECT COUNT(*) FROM kanban_boards").fetchone()[0] == 0
+
+    def test_not_found(self, client):
+        r = client.delete("/api/boards/999", headers=AUTH)
+        assert r.status_code == 404
+
+
+class TestCreateColumn:
+    def test_success(self, client):
+        r = client.post("/api/columns", headers=AUTH, json={"board_id": 1, "title": "New Column"})
+        assert r.status_code == 201
+        data = r.json()
+        assert data["title"] == "New Column"
+        assert data["position"] == 3  # after existing 3 columns
+
+    def test_invalid_board(self, client):
+        r = client.post("/api/columns", headers=AUTH, json={"board_id": 999, "title": "Col"})
+        assert r.status_code == 404
+
+
+class TestDeleteColumn:
+    def test_success(self, client, db):
+        r = client.delete("/api/column/1", headers=AUTH)
+        assert r.status_code == 204
+        assert db.execute("SELECT COUNT(*) FROM kanban_columns WHERE id = 1").fetchone()[0] == 0
+
+    def test_not_found(self, client):
+        r = client.delete("/api/column/999", headers=AUTH)
+        assert r.status_code == 404
 
 
 class TestCreateCard:

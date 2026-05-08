@@ -1,3 +1,4 @@
+import { useState } from "react";
 import clsx from "clsx";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -10,6 +11,7 @@ type KanbanColumnProps = {
   cards: Card[];
   onRename: (columnId: string, title: string) => void;
   onRenameCommit: (columnId: string, title: string) => void;
+  onDeleteColumn: (columnId: string) => void;
   onAddCard: (columnId: string, title: string, details: string) => void;
   onDeleteCard: (columnId: string, cardId: string) => void;
   highlightedCardIds?: Set<string>;
@@ -20,11 +22,13 @@ export const KanbanColumn = ({
   cards,
   onRename,
   onRenameCommit,
+  onDeleteColumn,
   onAddCard,
   onDeleteCard,
   highlightedCardIds,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <section
@@ -37,11 +41,32 @@ export const KanbanColumn = ({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="w-full">
-          <div className="flex items-center gap-3">
-            <div className="h-2 w-10 rounded-full bg-[var(--accent-yellow)]" />
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gray-text)]">
-              {cards.length} cards
-            </span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-10 rounded-full bg-[var(--accent-yellow)]" />
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--gray-text)]">
+                {cards.length} cards
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                if (confirmDelete) {
+                  onDeleteColumn(column.id);
+                } else {
+                  setConfirmDelete(true);
+                  setTimeout(() => setConfirmDelete(false), 3000);
+                }
+              }}
+              className={clsx(
+                "rounded-xl px-2 py-1 text-xs font-semibold transition",
+                confirmDelete
+                  ? "bg-red-50 text-red-500 border border-red-200"
+                  : "text-[var(--gray-text)] hover:text-red-400"
+              )}
+              title="Delete column"
+            >
+              {confirmDelete ? "Confirm?" : "×"}
+            </button>
           </div>
           <input
             value={column.title}
@@ -69,9 +94,7 @@ export const KanbanColumn = ({
           </div>
         )}
       </div>
-      <NewCardForm
-        onAdd={(title, details) => onAddCard(column.id, title, details)}
-      />
+      <NewCardForm onAdd={(title, details) => onAddCard(column.id, title, details)} />
     </section>
   );
 };
